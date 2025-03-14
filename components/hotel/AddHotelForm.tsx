@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-//import { Hotel, Room } from '@prisma/client'
+import { Hotel, Room } from '@prisma/client'
 import {
   Form,
   FormControl,
@@ -16,14 +16,21 @@ import {
 import { Input } from '../ui/input'
 import { Textarea } from '../ui/textarea'
 import { Checkbox } from '../ui/checkbox'
+import { UploadButton } from '../UploadThing'
+import { useState } from 'react'
+import { toast } from 'sonner'
+import Image from 'next/image'
+import { Button } from '../ui/button'
+import { Loader2, XCircle } from 'lucide-react'
+import axios from 'axios'
 
-// interface Props {
-//   hotel: HotelWithRooms | null
-// }
+interface Props {
+  hotel: HotelWithRooms | null
+}
 
-// export type HotelWithRooms = Hotel & {
-//   rooms: Room[]
-// }
+export type HotelWithRooms = Hotel & {
+  rooms: Room[]
+}
 
 const formSchema = z.object({
   title: z
@@ -53,7 +60,10 @@ const formSchema = z.object({
   coffeeShop: z.boolean().optional(),
 })
 
-const AddHotelForm = () => {
+const AddHotelForm = ({ hotel }: Props) => {
+  const [image, setImage] = useState<string | undefined>(hotel?.image)
+  const [imageIsDeleting, setImageIsDeleting] = useState<boolean>(false)
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -82,11 +92,34 @@ const AddHotelForm = () => {
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     console.log(values)
   }
+
+  const handleImageDelete = (image: string) => {
+    setImageIsDeleting(true)
+    const imageKey = image.substring(image.lastIndexOf('/') + 1)
+
+    axios
+      .post('/api/uploadthing/delete', { imageKey })
+      .then((res) => {
+        if (res.data.success) {
+          setImage('')
+          toast('Image deleted successfully!')
+        }
+      })
+      .catch(() => {
+        toast('Something went wrong!')
+      })
+      .finally(() => {
+        setImageIsDeleting(false)
+      })
+  }
+
   return (
     <div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* <h3 className='text-lg font-semibold'>{ hotel ? 'Update your hotel!': 'Describe your hotel!'}</h3> */}
+          <h3 className="text-lg font-semibold">
+            {hotel ? 'Update your hotel!' : 'Describe your hotel!'}
+          </h3>
           <div className="flex flex-col gap-6 md:flex-row">
             <div className="flex flex-1 flex-col gap-6">
               <FormField
@@ -310,6 +343,55 @@ const AddHotelForm = () => {
                   />
                 </div>
               </div>
+              <FormField
+                control={form.control}
+                name="image"
+                render={() => (
+                  <FormItem className="flex flex-col space-y-3">
+                    <FormLabel>Upload an image</FormLabel>
+                    <FormDescription>
+                      Choose an image that will show your hotel nicely
+                    </FormDescription>
+                    <FormControl>
+                      {image ? (
+                        <div className="relative mt-4 max-h-[400px] min-h-[200px] max-w-[400px] min-w-[200px]">
+                          <Image
+                            fill
+                            src={image}
+                            alt="Hotel Image"
+                            className="object-contain"
+                          />
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            className="absolute top-0 right-[-12px]"
+                            onClick={() => handleImageDelete(image)}
+                          >
+                            {imageIsDeleting ? <Loader2 /> : <XCircle />}
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="max-w[400px] border-primary/50 mt-4 flex flex-col items-center rounded border-2 border-dashed p-12">
+                          <UploadButton
+                            endpoint="imageUploader"
+                            onClientUploadComplete={(res) => {
+                              // Do something with the response
+                              console.log('Files: ', res)
+                              setImage(res[0].ufsUrl)
+                              toast('Upload completed')
+                            }}
+                            onUploadError={(error: Error) => {
+                              // Do something with the error.
+                              toast(`ERROR! ${error.message}`)
+                            }}
+                          />
+                        </div>
+                      )}
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
             </div>
             <div className="flex flex-1 flex-col gap-6">Part 2</div>
           </div>

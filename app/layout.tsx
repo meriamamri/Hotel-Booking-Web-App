@@ -5,6 +5,7 @@ import './globals.css'
 import NavBar from '@/components/layout/NavBar'
 import ThemeProvider from '@/components/ThemeProvider'
 import Container from '@/components/Container'
+import { Toaster } from '@/components/ui/sonner'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -39,6 +40,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <Toaster />
             <main className="flex min-h-screen flex-col">
               <NavBar />
               <section className="flex-grow">
