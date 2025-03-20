@@ -8,7 +8,7 @@ const getHotelById = async (hotelId: string) => {
     })
     if (!hotel) return null
     return hotel
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    //eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     throw new Error(error)
   }
