@@ -26,6 +26,7 @@ import {
   Loader2,
   Pencil,
   PencilIcon,
+  Plus,
   Terminal,
   Trash,
   XCircle,
@@ -42,6 +43,17 @@ import {
 } from '@/components/ui/select'
 import { useRouter } from 'next/navigation'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import AddRoomForm from '../room/AddRoomForm'
+import { Separator } from '@/components/ui/separator'
+import RoomCard from '../room/RoomCard'
 
 interface Props {
   hotel: HotelWithRooms | null
@@ -86,6 +98,7 @@ const AddHotelForm = ({ hotel }: Props) => {
   const [cities, setCities] = useState<ICity[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [isHotelDeleting, setIsHotelDeleting] = useState<boolean>(false)
+  const [isOpen, setIsOpen] = useState<boolean>(false)
 
   const { getStateCities, getCountryStates, getAllCountries } = useLocation()
   const router = useRouter()
@@ -210,6 +223,10 @@ const AddHotelForm = ({ hotel }: Props) => {
       .finally(() => {
         setImageIsDeleting(false)
       })
+  }
+
+  const handleDialogOpen = () => {
+    setIsOpen((prev) => !prev)
   }
 
   return (
@@ -664,6 +681,33 @@ const AddHotelForm = ({ hotel }: Props) => {
                     View
                   </Button>
                 )}
+                {hotel && (
+                  <Dialog open={isOpen}>
+                    <DialogTrigger>
+                      <Button
+                        type="button"
+                        variant={'outline'}
+                        className="max-w-[150px]"
+                        onClick={() => setIsOpen(true)}
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Room
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="w-[90%] max-w-[900px]">
+                      <DialogHeader className="px-2">
+                        <DialogTitle>Add Room</DialogTitle>
+                        <DialogDescription>
+                          Add details about a room in your hotel.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <AddRoomForm
+                        hotel={hotel}
+                        handleDialogOpen={handleDialogOpen}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                )}
                 {hotel ? (
                   <Button className="max-w-[150px]" disabled={isLoading}>
                     {isLoading ? (
@@ -693,6 +737,17 @@ const AddHotelForm = ({ hotel }: Props) => {
                   </Button>
                 )}
               </div>
+              {hotel && !!hotel.rooms.length && (
+                <div>
+                  <Separator />
+                  <h3 className="my-4 text-lg font-semibold">Hotel Rooms</h3>
+                  <div className="grid grid-cols-1 gap-6 2xl:grid-cols-2">
+                    {hotel.rooms.map((room) => (
+                      <RoomCard key={room.id} hotel={hotel} room={room} />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </form>
